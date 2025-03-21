@@ -15,6 +15,11 @@ public class SceneLoader : MonoBehaviour
         SceneManager.LoadScene("LoginScreen");
     }
 
+    public void LoadRegisterScene()
+    {
+        SceneManager.LoadScene("RegisterScreen");
+    }
+
     public void LoadStatScene()
     {
         //SceneManager.LoadScene("StatScreen");
@@ -26,11 +31,6 @@ public class SceneLoader : MonoBehaviour
     }
 
     public void LoadReportScene()
-    {
-        SceneManager.LoadScene("RScreenAlt");
-    }
-
-    public void LoadDBScene()
     {
         SceneManager.LoadScene("ReportScreen");
     }

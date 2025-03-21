@@ -2,21 +2,16 @@ using UnityEngine;
 using Mono.Data.Sqlite;  // SQLite support
 using UnityEngine.UI;
 using System.Data;  // To access SQLite commands
+using System.Security.Cryptography;
+using System.Text;  // For password hashing
 
 public class DatabaseManager : MonoBehaviour
 {
-    public InputField usernameInputField;
-    public Button loginButton;
-    public Button registerButton;
-
     private string dbPath = "URI=file:users.db";
 
     void Start()
     {
         CreateDB();
-        // Add button listeners
-        loginButton.onClick.AddListener(OnLoginButtonClick);
-        registerButton.onClick.AddListener(OnRegisterButtonClick);
     }
 
     public void CreateDB()
@@ -27,54 +22,73 @@ public class DatabaseManager : MonoBehaviour
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE);";
+                // Create table with username and password fields
+                command.CommandText = "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, password TEXT NOT NULL);";
                 command.ExecuteNonQuery();
-                Debug.Log("table create");
+                Debug.Log("Table created");
             }
             connection.Close();
         }
     }
 
-    // Login button click event
-    public void OnLoginButtonClick()
+    public bool CheckUsernameAndPassword(string username, string password)
     {
-        string username = usernameInputField.text;
-        if (string.IsNullOrEmpty(username))
-        {
-            return;
-        }
+        return CheckUsernameAndPasswordHelper(username, password);
+    }
 
-        // Check if the username exists in the database
-        if (CheckUsernameExists(username))
+    // Check if the username exists and password is correct
+    private bool CheckUsernameAndPasswordHelper(string username, string password)
+    {
+        string hashedPassword = HashPassword(password);
+        //string hashedPassword = password;
+
+        using (var connection = new SqliteConnection(dbPath))
         {
-            Debug.Log("Login successful for: " + username);
-            SceneLoader sl = new SceneLoader();
-            sl.LoadMainScene();
-            Global.GlobalUser = username;
-        }
-        else
-        {
-            Debug.Log("Username does not exist.");
+            connection.Open();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT COUNT(*) FROM users WHERE name = @name AND password = @password";
+                command.Parameters.Add(new SqliteParameter("@name", username));
+                command.Parameters.Add(new SqliteParameter("@password", hashedPassword));
+
+                long result = (long)command.ExecuteScalar();
+                connection.Close();
+
+                return result > 0; // Returns true if username and password match, false otherwise
+            }
         }
     }
 
-    // Register button click event
-    public void OnRegisterButtonClick()
+    public bool RegisterUsername(string username, string password)
     {
-        string username = usernameInputField.text;
-        if (string.IsNullOrEmpty(username))
+        return RegisterUsernameHelper(username, password);
+    }
+
+    // Register a new username with a hashed password
+    private bool RegisterUsernameHelper(string username, string password)
+    {
+        // Check if the username already exists
+        if (CheckUsernameExists(username))
         {
-            return;
+            return false; // Username already exists
         }
 
-        // Register the new username in the database
-        if (RegisterUsername(username))
+        string hashedPassword = HashPassword(password);
+        //string hashedPassword = password;
+
+        using (var connection = new SqliteConnection(dbPath))
         {
-            Debug.Log("User registered: " + username);
-        }
-        else
-        {
-            Debug.Log("Username already exists.");
+            connection.Open();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "INSERT INTO users (name, password) VALUES (@name, @password)";
+                command.Parameters.Add(new SqliteParameter("@name", username));
+                command.Parameters.Add(new SqliteParameter("@password", hashedPassword));
+                command.ExecuteNonQuery();
+                connection.Close();
+
+                return true; // Registration successful
+            }
         }
     }
 
@@ -97,27 +111,18 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
-    // Register a new username
-    bool RegisterUsername(string username)
+    // Hash the password using SHA-256 (for example)
+    string HashPassword(string password)
     {
-        // Check if the username already exists
-        if (CheckUsernameExists(username))
+        using (SHA256 sha256 = SHA256.Create())
         {
-            return false; // Username already exists
-        }
-
-        using (var connection = new SqliteConnection(dbPath))
-        {
-            connection.Open();
-            using (var command = connection.CreateCommand())
+            byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (byte b in hashBytes)
             {
-                command.CommandText = "INSERT INTO users (name) VALUES (@name)";
-                command.Parameters.Add(new SqliteParameter("@name", username));
-                command.ExecuteNonQuery();
-                connection.Close();
-
-                return true; // Registration successful
+                stringBuilder.Append(b.ToString("x2"));
             }
+            return stringBuilder.ToString();
         }
     }
 }

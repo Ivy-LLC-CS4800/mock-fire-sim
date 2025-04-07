@@ -20,6 +20,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ReportScreen.unity
     guid: 50532bce5497c5649b0c220fa422b171
+  - enabled: 1
+    path: Assets/Scenes/EnvTest2.unity
+    guid: 30431e49994bb87488d30661fddbb591
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

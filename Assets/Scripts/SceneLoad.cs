@@ -30,6 +30,11 @@ public class SceneLoader : MonoBehaviour
         SceneManager.LoadScene("EnvTest");
     }
 
+    public void LoadEnv1Scene()
+    {
+        SceneManager.LoadScene("EnvTest2");
+    }
+
     public void LoadReportScene()
     {
         SceneManager.LoadScene("ReportScreen");

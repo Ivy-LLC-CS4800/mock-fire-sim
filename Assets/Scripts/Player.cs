@@ -14,6 +14,7 @@ public class Player : MonoBehaviour
     [SerializeField] private GameObject inHandItem;
     [SerializeField] private InputActionReference interactionInput, dropInput, useInput;
     private RaycastHit hit;
+    private Collider lastHit = null;
 
 
     private void Start()
@@ -83,9 +84,29 @@ public class Player : MonoBehaviour
             playerCameraTransform.forward, 
             out hit, 
             hitRange, 
-            pickableLayerMask))
-        {
-            pickUpUI.SetActive(true);
+            pickableLayerMask)){
+        
+            var script = hit.collider.GetComponent<Outline>();
+            if(script != null){
+                if(lastHit != null){
+                    var lastScript = lastHit.GetComponent<Outline>();
+                    if(lastScript != null){
+                        lastScript.enabled = false;
+                    }
+                }
+                script.enabled = true;
+                lastHit = hit.collider;
+            } 
         }
+        else{
+            if(lastHit != null){
+                var lastScript = lastHit.GetComponent<Outline>();
+                if(lastScript != null){
+                    lastScript.enabled = false;
+                }
+                lastHit = null;
+            }
+        }
+        pickUpUI.SetActive(true);
     }
 }

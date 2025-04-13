@@ -1,6 +1,10 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+<<<<<<< HEAD:Assets/Imports/Avatar/Protection_suite/Base_mesh/Materials/mat.mat
 --- !u!114 &-2065310818772305860
+=======
+--- !u!114 &-2968667234762908238
+>>>>>>> 8f815d5 (Personal Copy):Assets/Protection_suite/Base_mesh/Materials/mat.mat
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}

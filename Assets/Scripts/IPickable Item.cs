@@ -20,8 +20,17 @@ public class PickableItem : MonoBehaviour, IPickable
         {
             rb.isKinematic = true;
         }
-        transform.position = Vector3.zero;
-        transform.rotation = Quaternion.identity;
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.Euler(270f, 0f, 340f);
+        transform.localScale = Vector3.one;
         return this.gameObject;
+    }
+
+    public void OnTriggerEnter(Collider other)
+    {
+        IUseableFloor floorItem = other.GetComponent<IUseableFloor>();
+        if(floorItem != null){
+            floorItem.Use(this.gameObject);
+        }        
     }
 }

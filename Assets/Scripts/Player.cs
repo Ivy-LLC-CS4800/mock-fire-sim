@@ -7,13 +7,16 @@ using UnityEngine.InputSystem;
 public class Player : MonoBehaviour
 {
     [SerializeField] private LayerMask pickableLayerMask;
+    [SerializeField] private LayerMask useableLayerMask;
     [SerializeField] private Transform playerCameraTransform;
     [SerializeField] private GameObject pickUpUI;
+    [SerializeField] private GameObject useableUI;
     [SerializeField] [Min(1)] private float hitRange = 3;
     [SerializeField] private Transform pickUpParent;
     [SerializeField] private GameObject inHandItem;
     [SerializeField] private InputActionReference interactionInput, dropInput, useInput;
-    private RaycastHit hit;
+    private RaycastHit pickableHit;
+    private RaycastHit useableHit;
     private Collider lastHit = null;
 
 
@@ -27,26 +30,37 @@ public class Player : MonoBehaviour
 
     //Funtion meant to interaction one object in hand with one in sim
     private void Use(InputAction.CallbackContext obj){
-            IUsable usable = hit.collider.GetComponent<IUsable>();
-            //If the object has a Use() function, calls it
-            //Currently does nothing 
-            if (usable != null){
-                usable.Use(this.gameObject);
+        if(useableHit.collider != null){
+            if(inHandItem != null){
+                IUseableFloor usable = useableHit.collider.GetComponent<IUseableFloor>();
+                //If the object has a Use() function, calls it
+                if (usable != null){
+                    usable.Use(inHandItem);
+                } 
+                else{
+                    Debug.Log("Hit object not implementing IUseableFloor");
+                }
             }
+            else{
+                Debug.Log("No held item");
+            }
+        }
+        else {
+            Debug.Log("No useable objects");
+        }
     }
 
-    //Function to drop any item currently in inHandItem slot, does nothing
-    // if empty
+    //Function to drop any item currently in inHandItem slot, does nothing if empty
     private void Drop(InputAction.CallbackContext obj){
         if (inHandItem != null){
             //Drops object at inHandItem slot position, maybe put it slightly in front of character
             inHandItem.transform.SetParent(null);
-            inHandItem = null;
             //If object has a rigid body, make the object be affected by physics once dropped
-            Rigidbody rb = hit.collider.GetComponent<Rigidbody>();
+            Rigidbody rb = inHandItem.GetComponent<Rigidbody>();
             if (rb != null){
                 rb.isKinematic = false;
             }
+            inHandItem = null;
         }
     }
 
@@ -54,8 +68,8 @@ public class Player : MonoBehaviour
     //Object must include script IPickupableItem
     private void PickUp(InputAction.CallbackContext obj){
         //Players need to be actively looking at object and have their hands slot free to pick up
-        if(hit.collider != null && inHandItem == null){
-            IPickable pickableItem = hit.collider.GetComponent<IPickable>();
+        if(pickableHit.collider != null && inHandItem == null){
+            IPickable pickableItem = pickableHit.collider.GetComponent<IPickable>();
             if (pickableItem != null){
                 //Places object in hand slot & sets slot to parent so object moves with player
                 inHandItem = pickableItem.PickUp();
@@ -69,24 +83,22 @@ public class Player : MonoBehaviour
     //IF PickUpUI NOT FILLED RAYCAST DOES NOT UPDATE
     private void Update(){
         //Line below shows the raycast line but can be removed without issue
-        Debug.DrawRay(playerCameraTransform.position, playerCameraTransform.forward * hitRange, Color.red);
-        //Shows the pickUpUI if the raycast detect something
-        if (hit.collider != null){
-            pickUpUI.SetActive(false);
-        }
-        //Updates inHandItem slot for other functions for pickup and drop
-        if (inHandItem != null){
-            return;
-        }
         //Keeps the raycast in front of the camera
-        if (Physics.Raycast(
-            playerCameraTransform.position, 
-            playerCameraTransform.forward, 
-            out hit, 
-            hitRange, 
-            pickableLayerMask)){
+        if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out useableHit, hitRange, useableLayerMask)){
+            Debug.DrawRay(playerCameraTransform.position, playerCameraTransform.forward * hitRange, Color.blue);
+            if(inHandItem != null){
+                useableUI.SetActive(true);
+                return;
+            }
+        } 
+        else{
+            useableUI.SetActive(false);
+        }
+        if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out pickableHit, hitRange, pickableLayerMask)){
+            Debug.DrawRay(playerCameraTransform.position, playerCameraTransform.forward * hitRange, Color.red);
+            pickUpUI.SetActive(true);
         
-            var script = hit.collider.GetComponent<Outline>();
+            var script = pickableHit.collider.GetComponent<Outline>();
             if(script != null){
                 if(lastHit != null){
                     var lastScript = lastHit.GetComponent<Outline>();
@@ -95,10 +107,11 @@ public class Player : MonoBehaviour
                     }
                 }
                 script.enabled = true;
-                lastHit = hit.collider;
+                lastHit = pickableHit.collider;
             } 
         }
         else{
+            pickUpUI.SetActive(false);
             if(lastHit != null){
                 var lastScript = lastHit.GetComponent<Outline>();
                 if(lastScript != null){
@@ -107,6 +120,8 @@ public class Player : MonoBehaviour
                 lastHit = null;
             }
         }
-        pickUpUI.SetActive(true);
+        if (inHandItem != null){
+            return;
+        }
     }
 }

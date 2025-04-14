@@ -1,20 +1,25 @@
 fileFormatVersion: 2
-guid: 8f55c22533aabd547bdd14998c0f9295
+guid: 079f08b75e4edfb4e9c40ab9f08f07bd
 ModelImporter:
   serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
+    100002: Handle_collision
     400000: //RootNode
+    400002: Handle_collision
     2100000: No Name
     2300000: //RootNode
+    2300002: Handle_collision
     3300000: //RootNode
-    4300000: scen
+    3300002: Handle_collision
+    4300000: Blade_collision
+    4300002: Handle_collision
   externalObjects: {}
   materials:
     importMaterials: 1
     materialName: 0
     materialSearch: 1
-    materialLocation: 0
+    materialLocation: 1
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
@@ -97,8 +102,8 @@ ModelImporter:
   assetBundleVariant: 
 AssetOrigin:
   serializedVersion: 1
-  productId: 158254
-  packageName: Protective suit
+  productId: 179431
+  packageName: Realistic Shovel Clean
   packageVersion: 1.0
-  assetPath: Assets/Imports/Avatar/Protection_suite/Stend/scen.fbx
-  uploadId: 361326
+  assetPath: Assets/Nollie Inward Game Assets/Realistic_shovel/Art/Meshes/Clean_shovel_collision.fbx
+  uploadId: 391443

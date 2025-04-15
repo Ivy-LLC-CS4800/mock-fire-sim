@@ -1,17 +1,23 @@
 using UnityEngine;
 
+/// <summary>
+/// Handles switching suits based on clicking z
+/// <summary/>
 public class SuitSwapper : MonoBehaviour
 {
 
-    public GameObject[] characterModels;
+    public GameObject[] characterModels; // GameObject with an array of all the character models to switch between
     public int initialActiveIndex = 0;
     private int currentIndex = 0;
     public bool setCameraAsChild = true; // Control if the camera should be a child
-    public Vector3 cameraLocalPositionOffset = new Vector3(0f, 1.46f, 0f); // Optional camera offset
+    public Vector3 cameraLocalPositionOffset = new Vector3(0f, 1.46f, 0f); // Optional camera offset to head height
     public Quaternion cameraLocalRotationOffset = Quaternion.identity; // Optional camera rotation offset
 
     private Transform mainCameraTransform;
 
+    /// <summary>
+    /// Sets up main camera and enable first character model (person)
+    /// </summary>
     void Start()
     {
         // Find the main camera
@@ -57,6 +63,9 @@ public class SuitSwapper : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Switches to next character model in GameObject array
+    /// </summary>
     public void SwapToNextModel()
     {
         if (characterModels.Length > 0 && mainCameraTransform != null)
@@ -88,10 +97,10 @@ public class SuitSwapper : MonoBehaviour
         }
     }
 
-    // Example usage
+    // Handles user input to trigger suit swap on input key 'Z'
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.Z))
         {
             SwapToNextModel();
         }

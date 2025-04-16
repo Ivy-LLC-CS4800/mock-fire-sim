@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+//<summary>
+//Gives the player the ability to detect gameObjects they can use, pickup, and drop
+//</summary>
 public class Player : MonoBehaviour
 {
     [SerializeField] private LayerMask pickableLayerMask;
@@ -19,21 +21,21 @@ public class Player : MonoBehaviour
     private RaycastHit useableHit;
     private Collider lastHit = null;
 
-
+    //TODO: Assigns keybinds to specific functions
+    //Parameters: Scene change and or application start
     private void Start()
     {
-        //Starting causes interaction system to assign functions
         interactionInput.action.performed += PickUp;
         dropInput.action.performed += Drop;
         useInput.action.performed += Use;
     }
 
-    //Funtion meant to interaction one object in hand with one in sim
+    //TODO: gameObject in handSlot interacts with gameObjects on the floor, gameObject interacted with keeps track of number of times it was interacted with
+    //Parameters: Keyboard input, raycast detecting gameObject, gameObject in handSlot, gameObject useableFloor component, useable layer, use function
     private void Use(InputAction.CallbackContext obj){
         if(useableHit.collider != null){
             if(inHandItem != null){
                 IUseableFloor usable = useableHit.collider.GetComponent<IUseableFloor>();
-                //If the object has a Use() function, calls it
                 if (usable != null){
                     usable.Use(inHandItem);
                 } 
@@ -50,12 +52,11 @@ public class Player : MonoBehaviour
         }
     }
 
-    //Function to drop any item currently in inHandItem slot, does nothing if empty
+    //TODO: Drops gameObject in handSlot
+    //Parameters: Keyboard input, gameObject in handSlot, gameObject rigid body component
     private void Drop(InputAction.CallbackContext obj){
         if (inHandItem != null){
-            //Drops object at inHandItem slot position, maybe put it slightly in front of character
             inHandItem.transform.SetParent(null);
-            //If object has a rigid body, make the object be affected by physics once dropped
             Rigidbody rb = inHandItem.GetComponent<Rigidbody>();
             if (rb != null){
                 rb.isKinematic = false;
@@ -64,25 +65,23 @@ public class Player : MonoBehaviour
         }
     }
 
-    //Function to pick up an object in the interactable layer
-    //Object must include script IPickupableItem
+    //TODO: Picks up a gameObject into the handSlot
+    //Parameters: Keyboard input, raycast detects gameObject, empty in handSlot, gameObject IPickable component
     private void PickUp(InputAction.CallbackContext obj){
-        //Players need to be actively looking at object and have their hands slot free to pick up
         if(pickableHit.collider != null && inHandItem == null){
             IPickable pickableItem = pickableHit.collider.GetComponent<IPickable>();
             if (pickableItem != null){
-                //Places object in hand slot & sets slot to parent so object moves with player
                 inHandItem = pickableItem.PickUp();
                 inHandItem.transform.SetParent(pickUpParent.transform, pickableItem.KeepWorldPosition);
             }
         }
     }
 
-    //Function to detect if the camera is looking at an interactable object
-    //Uses raycast to check every second
-    //IF PickUpUI NOT FILLED RAYCAST DOES NOT UPDATE
+    //TODO: Keeps raycast infront of main camera, enable/disable pickUp UI, enable/disable useable UI, enable/disable outline script
+    //Parameters: Raycast initilized, inHand slot empty/full for UI, gameObject outline component
     private void Update(){
-        //Keeps the raycast in front of the camera
+
+        //This raycast is for useable objects
         if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out useableHit, hitRange, useableLayerMask)){
             Debug.DrawRay(playerCameraTransform.position, playerCameraTransform.forward * hitRange, Color.blue);
             if(inHandItem != null){
@@ -93,10 +92,14 @@ public class Player : MonoBehaviour
         else{
             useableUI.SetActive(false);
         }
+
+        //This raycast is for pickUp objects
         if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out pickableHit, hitRange, pickableLayerMask)){
             Debug.DrawRay(playerCameraTransform.position, playerCameraTransform.forward * hitRange, Color.red);
             pickUpUI.SetActive(true);
         
+            //This block checks the last detected item to disable the outline script if the item is in the handSlot.
+            //First outline items when there is no last detected gameObject
             var script = pickableHit.collider.GetComponent<Outline>();
             if(script != null){
                 if(lastHit != null){
@@ -109,6 +112,7 @@ public class Player : MonoBehaviour
                 lastHit = pickableHit.collider;
             } 
         }
+        //Then disable outline script when the gameObject is the same as the last detected gameObject
         else{
             pickUpUI.SetActive(false);
             if(lastHit != null){

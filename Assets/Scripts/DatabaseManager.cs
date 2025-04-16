@@ -5,15 +5,22 @@ using System.Data;  // To access SQLite commands
 using System.Security.Cryptography;
 using System.Text;  // For password hashing
 
+//<summary>
+// Creates a database instance and connects it to the local device database to check usernames,passwords, and register new users
+//</summary>
 public class DatabaseManager : MonoBehaviour
 {
     private string dbPath = "URI=file:users.db";
 
+    //TODO: Initialize database
+    //Parameters: Start application
     void Start()
     {
         CreateDB();
     }
 
+    //TODO: Creates a database instance and connects to local device database
+    //Parameters:
     public void CreateDB()
     {
         using (var connection = new SqliteConnection(dbPath))
@@ -31,20 +38,24 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
+    //TODO: Verifies if user exists in database and the password is correct
+    //Parameters: Username, password, initialized database
     public bool CheckUsernameAndPassword(string username, string password)
     {
         return CheckUsernameAndPasswordHelper(username, password);
     }
 
-    // Check if the username exists and password is correct
+    //TODO: Checks username and password against database
+    //Parameters: Username, password, initialized database instance
     private bool CheckUsernameAndPasswordHelper(string username, string password)
     {
         string hashedPassword = HashPassword(password);
-        //string hashedPassword = password;
+        //string hashedPassword = password; 
 
         using (var connection = new SqliteConnection(dbPath))
         {
             connection.Open();
+
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = "SELECT COUNT(*) FROM users WHERE name = @name AND password = @password";
@@ -59,12 +70,15 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
+    //TODO: Adds new username and password database
+    //Parameters: Username, password, initialized database instance
     public bool RegisterUsername(string username, string password)
     {
         return RegisterUsernameHelper(username, password);
     }
 
-    // Register a new username with a hashed password
+    //TODO: Adds new username and password database
+    //Parameters: Username, password, initialized database instance
     private bool RegisterUsernameHelper(string username, string password)
     {
         // Check if the username already exists
@@ -92,7 +106,8 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
-    // Check if the username exists in the database
+    //TODO: Checks for existing username in database
+    //Parameters: Username, initialized database instance
     bool CheckUsernameExists(string username)
     {
         using (var connection = new SqliteConnection(dbPath))
@@ -111,7 +126,8 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
-    // Hash the password using SHA-256 (for example)
+    //TODO: Encrpts password using SHA-256
+    //Parameters: Password, initialized database instance
     string HashPassword(string password)
     {
         using (SHA256 sha256 = SHA256.Create())

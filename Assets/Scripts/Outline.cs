@@ -13,6 +13,9 @@ using UnityEngine;
 
 [DisallowMultipleComponent]
 
+//<summary
+// Online package avaiable by author Chris Nolet to outline gameObjects in multiple ways.
+//</summary>/
 public class Outline : MonoBehaviour {
   private static HashSet<Mesh> registeredMeshes = new HashSet<Mesh>();
 

@@ -25,8 +25,13 @@ public class Player : MonoBehaviour
     //Parameters: Scene change and or application start
     private void Start()
     {
+         if (interactionInput?.action != null)
         interactionInput.action.performed += PickUp;
+
+        if (dropInput?.action != null)
         dropInput.action.performed += Drop;
+
+        if (useInput?.action != null)
         useInput.action.performed += Use;
     }
 

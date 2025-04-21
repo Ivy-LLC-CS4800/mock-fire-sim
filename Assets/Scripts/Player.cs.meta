@@ -1,2 +1,19 @@
 fileFormatVersion: 2
 guid: c337c83d568482f48827b9b98f7b85d5
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - playerCameraTransform: {instanceID: 0}
+  - pickUpUI: {instanceID: 0}
+  - useableUI: {instanceID: 0}
+  - pickUpParent: {instanceID: 0}
+  - inHandItem: {instanceID: 0}
+  - interactionInput: {fileID: 1781555164194001046, guid: 1db5e1ec3923cd04db7e6eed4c488f2d, type: 3}
+  - dropInput: {fileID: 7040659881675835329, guid: 1db5e1ec3923cd04db7e6eed4c488f2d, type: 3}
+  - useInput: {fileID: 2411907206095950430, guid: 1db5e1ec3923cd04db7e6eed4c488f2d, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

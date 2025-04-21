@@ -17,16 +17,24 @@ using UnityEngine;
 // Online package avaiable by author Chris Nolet to outline gameObjects in multiple ways.
 //</summary>/
 public class Outline : MonoBehaviour {
+
+  // keeps track of meshes that have already had their smooth normals registered
   private static HashSet<Mesh> registeredMeshes = new HashSet<Mesh>();
 
+  /// <summary>
+  /// Defines the different modes for how the outline effect is rendered.
+  /// </summary>
   public enum Mode {
-    OutlineAll,
-    OutlineVisible,
-    OutlineHidden,
-    OutlineAndSilhouette,
-    SilhouetteOnly
+    OutlineAll, // outlines all parts of object, regardless of visibility
+    OutlineVisible, // outlines parts of object visible to camera
+    OutlineHidden, // outlines parts of object hidden behind other objects
+    OutlineAndSilhouette, // outlines visible parts and renders silhouette of object
+    SilhouetteOnly // renders only silhouette of object
   }
 
+  /// <summary>
+  /// Gets or sets current outline mode.
+  /// </summary>
   public Mode OutlineMode {
     get { return outlineMode; }
     set {
@@ -35,6 +43,9 @@ public class Outline : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Gets or sets color of the outline.
+  /// </summary>
   public Color OutlineColor {
     get { return outlineColor; }
     set {
@@ -43,6 +54,9 @@ public class Outline : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Gets or sets thickness of the outline.
+  /// </summary>
   public float OutlineWidth {
     get { return outlineWidth; }
     set {
@@ -51,38 +65,53 @@ public class Outline : MonoBehaviour {
     }
   }
 
+  // Serializable class used for internally serializing precomputed smooth normals.
   [Serializable]
   private class ListVector3 {
     public List<Vector3> data;
   }
 
+  /// <summary> Current mode of outline effect. </summary>
   [SerializeField]
   private Mode outlineMode;
 
+  /// <summary> Color of the outline. </summary>
   [SerializeField]
   private Color outlineColor = Color.white;
 
+  /// <summary> Width of the outline. </summary>
   [SerializeField, Range(0f, 10f)]
   private float outlineWidth = 2f;
 
   [Header("Optional")]
 
+  /// <summary> Enables precomputation of smooth normals. </summary>
   [SerializeField, Tooltip("Precompute enabled: Per-vertex calculations are performed in the editor and serialized with the object. "
   + "Precompute disabled: Per-vertex calculations are performed at runtime in Awake(). This may cause a pause for large meshes.")]
   private bool precomputeOutline;
 
+  /// <summary>
+  /// List of Mesh assets used as keys for storing precomputed smooth normals.
+  /// </summary>
   [SerializeField, HideInInspector]
   private List<Mesh> bakeKeys = new List<Mesh>();
 
+  /// <summary>
+  /// A list of ListVector3 objects storing the precomputed smooth normals corresponding to the bakeKeys.
+  /// </summary>
   [SerializeField, HideInInspector]
   private List<ListVector3> bakeValues = new List<ListVector3>();
 
-  private Renderer[] renderers;
-  private Material outlineMaskMaterial;
-  private Material outlineFillMaterial;
+  private Renderer[] renderers; // array of Renderer components in GameObject
+  private Material outlineMaskMaterial; // Material instance used to create outline mask effect
+  private Material outlineFillMaterial; // Material instance used to fill the outline with specified color
 
   private bool needsUpdate;
 
+  /// <summary>
+  /// Called when script instance is loaded.
+  /// Caches renderers, instantiates outline materials, and loads smooth normals.
+  /// </summary>
   void Awake() {
 
     // Cache renderers
@@ -102,6 +131,10 @@ public class Outline : MonoBehaviour {
     needsUpdate = true;
   }
 
+  /// <summary>
+  /// Called when component becomes enabled.
+  /// Appends the outline mask and fill materials to the materials of each renderer.
+  /// </summary>
   void OnEnable() {
     foreach (var renderer in renderers) {
 
@@ -115,6 +148,11 @@ public class Outline : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Called in editor when script is loaded or value is changed in Inspector.
+  /// Updates material properties, clears the bake cache if precomputation is disabled or corrupted,
+  /// and triggers the baking of smooth normals if precomputation is enabled and no data exists.
+  /// </summary>
   void OnValidate() {
 
     // Update material properties
@@ -132,6 +170,9 @@ public class Outline : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Applies material properties if an update is needed.
+  /// </summary>
   void Update() {
     if (needsUpdate) {
       needsUpdate = false;
@@ -140,6 +181,10 @@ public class Outline : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Called when component is disabled.
+  /// Removes instantiated outline and fill materials.
+  /// </summary>
   void OnDisable() {
     foreach (var renderer in renderers) {
 
@@ -153,6 +198,9 @@ public class Outline : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Destroys instantiated outline and fill materials to prevent memory leaks.
+  /// </summary>
   void OnDestroy() {
 
     // Destroy material instances
@@ -160,6 +208,9 @@ public class Outline : MonoBehaviour {
     Destroy(outlineFillMaterial);
   }
 
+  /// <summary>
+  /// Generates and serializes smooth normals for all MeshFilter components in the GameObject and its children.
+  /// </summary>
   void Bake() {
 
     // Generate smooth normals for each mesh
@@ -180,6 +231,10 @@ public class Outline : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Loads precomputed smooth normals from the `bakeValues` list or generates them at runtime
+  /// for all MeshFilter and SkinnedMeshRenderer components in the GameObject and its children.
+  /// </summary>
   void LoadSmoothNormals() {
 
     // Retrieve or generate smooth normals
@@ -221,6 +276,11 @@ public class Outline : MonoBehaviour {
     }
   }
 
+  /// <summary>
+  /// Calculates smooth normals for a given mesh by averaging the normals of vertices that share the same position.
+  /// </summary>
+  /// <param name="mesh"></param>
+  /// <returns> A List of Vector3 representing the smooth normals for each vertex of the mesh. </returns>
   List<Vector3> SmoothNormals(Mesh mesh) {
 
     // Group vertices by location
@@ -255,6 +315,12 @@ public class Outline : MonoBehaviour {
     return smoothNormals;
   }
 
+  /// <summary>
+  /// Combines all submeshes of a given mesh into a single submesh.
+  /// Ensures the outline shader works correctly on objects with multiple materials/submeshes.
+  /// </summary>
+  /// <param name="mesh"></param>
+  /// <param name="materials"></param>
   void CombineSubmeshes(Mesh mesh, Material[] materials) {
 
     // Skip meshes with a single submesh
@@ -272,6 +338,11 @@ public class Outline : MonoBehaviour {
     mesh.SetTriangles(mesh.triangles, mesh.subMeshCount - 1);
   }
 
+  /// <summary>
+  /// Updates the properties of the outline materials based on the current `OutlineMode`, `OutlineColor`, and `OutlineWidth`.
+  /// This method sets the `_OutlineColor` on the `outlineFillMaterial` and adjusts the `_ZTest` and `_OutlineWidth`
+  /// properties on both the `outlineMaskMaterial` and `outlineFillMaterial` according to the selected outline mode.
+  /// </summary>
   void UpdateMaterialProperties() {
 
     // Apply properties according to mode

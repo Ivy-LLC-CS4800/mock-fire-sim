@@ -8,6 +8,9 @@ public class PickableItemTests
     private GameObject pickableGO;
     private PickableItem pickableItem;
 
+    /// <summary>
+    /// Creates a gameObject with the PickableItem component
+    /// </summary>
     [SetUp]
     public void SetUp()
     {
@@ -15,12 +18,18 @@ public class PickableItemTests
         pickableItem = pickableGO.AddComponent<PickableItem>();
     }
 
+    /// <summary>
+    /// Removes the gameObject to reset test environment
+    /// </summary>
     [TearDown]
     public void TearDown()
     {
         Object.DestroyImmediate(pickableGO);
     }
 
+    //Test: If rigidbody component exists, gameObjects moves to correct place and kinematic is enabled
+    //Predicted: gameObject moved to hand gameObject with appropriate rotation
+    //Checked: PickUp()
     [UnityTest]
     public IEnumerator PickUp_WithRigidbody_SetsKinematicAndTransforms()
     {
@@ -39,6 +48,9 @@ public class PickableItemTests
         Assert.AreEqual(Vector3.one, pickableGO.transform.localScale);
     }
 
+    //Test: If no rigidbody component exists, only move gameObject to correct place
+    //Predicted: gameObject will be placed in hand slot with rotation, no change in kinematics
+    //Checked: getComponent<Rigidbody>(), PickUp()
     [UnityTest]
     public IEnumerator PickUp_WithoutRigidbody_SkipsKinematicAndSetsTransforms()
     {

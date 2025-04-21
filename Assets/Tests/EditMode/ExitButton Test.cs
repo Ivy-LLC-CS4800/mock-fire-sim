@@ -8,6 +8,9 @@ public class ExitButtonScriptTests
     private GameObject exitButtonGO;
     private ExitButtonScript exitButton;
 
+    /// <summary>
+    /// Creates a gameObject with the ExitButtonScript component
+    /// </summary>
     [SetUp]
     public void Setup()
     {
@@ -16,6 +19,9 @@ public class ExitButtonScriptTests
         exitButton = exitButtonGO.AddComponent<ExitButtonScript>();
     }
 
+    /// <summary>
+    /// Checks if application is still running, not ended prematurely, before destroying gameObject
+    /// </summary>
     [TearDown]
     public void Teardown()
     {
@@ -25,6 +31,9 @@ public class ExitButtonScriptTests
             Object.DestroyImmediate(exitButtonGO);
     }
 
+    //Test: When Exit button is pressed, script properly logs when button is pushed
+    //Predicted: Exit log
+    //Checked: ExitGame()
     [UnityTest]
     public IEnumerator ExitGame_LogsExitMessage()
     {

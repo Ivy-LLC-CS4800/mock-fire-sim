@@ -9,6 +9,9 @@ public class DatabaseManagerTests
 
     private string testDBPath = "URI=file:test_users.db";
 
+    /// <summary>
+    /// Creats an instance of a dummy database for testing.
+    /// </summary>
     [SetUp]
     public void SetUp()
     {
@@ -22,6 +25,9 @@ public class DatabaseManagerTests
         dbManager.CreateDB(); // Ensure table is ready
     }
 
+    /// <summary>
+    /// Resets testing enviornment for accurate tests
+    /// </summary>
     [TearDown]
     public void TearDown()
     {
@@ -35,6 +41,9 @@ public class DatabaseManagerTests
         }
     }
 
+    //Test: Registering a new user with their username and password
+    //Predicted: true, user was successfully registered
+    //Checked: RegisterUsername(), with testUser and testPass
     [Test]
     public void RegisterUsername_Succeeds_WhenNewUser()
     {
@@ -42,6 +51,9 @@ public class DatabaseManagerTests
         Assert.IsTrue(result);
     }
 
+    //Test: User exsists when attempted to register new user, but different passwords used
+    //Predicted: False, user failed regristation 
+    //Checked: RegisterUsername(), with duplicateUser, pass1, pass2
     [Test]
     public void RegisterUsername_Fails_WhenDuplicateUser()
     {
@@ -50,6 +62,9 @@ public class DatabaseManagerTests
         Assert.IsFalse(result);
     }
 
+    //Test: User can successfully log in using correct username and password
+    //Predicted: True, username and password match database
+    //Checked: CheckUsernameAndPassword(), with validUser and secret
     [Test]
     public void CheckUsernameAndPassword_ReturnsTrue_WithCorrectCredentials()
     {
@@ -58,6 +73,9 @@ public class DatabaseManagerTests
         Assert.IsTrue(result);
     }
 
+    //Test: User input the incorrect password and correct username
+    //Predicted: False, password did not match user profile
+    //Checked: CheckUsernameAndPassword, validUser2, correctPass, wrongPass
     [Test]
     public void CheckUsernameAndPassword_ReturnsFalse_WithWrongPassword()
     {
@@ -66,6 +84,9 @@ public class DatabaseManagerTests
         Assert.IsFalse(result);
     }
 
+    //Test: User attempts to login without registering a profile first
+    //Predicted: False, username and password do not match anything in database
+    //Checked: CheckUsernameAndPassword(), ghostUser and nope
     [Test]
     public void CheckUsernameAndPassword_ReturnsFalse_WithNonExistentUser()
     {

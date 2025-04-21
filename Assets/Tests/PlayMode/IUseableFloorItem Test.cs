@@ -9,6 +9,9 @@ public class IUseableFloorItemTests
     private IUseableFloorItem useableItem;
     private GameObject heldItem;
 
+    /// <summary>
+    /// Creates a useableFloorItem gameObject with an IUseableFloorItem, Creates a heldItem gameObject
+    /// </summary>
     [SetUp]
     public void SetUp()
     {
@@ -18,6 +21,9 @@ public class IUseableFloorItemTests
         heldItem = new GameObject("HeldItem");
     }
 
+    /// <summary>
+    /// Removes UseableFloorItem and heldItem to reset test environment
+    /// </summary>
     [TearDown]
     public void TearDown()
     {
@@ -25,6 +31,9 @@ public class IUseableFloorItemTests
         Object.DestroyImmediate(heldItem);
     }
 
+    //Test: gameObject accurately tracks number of interactions
+    //Predicted: [0,1,2] starts at 0 and each respective use increases predicted value by one
+    //Checked: getInteractionCount(), Use()
     [UnityTest]
     public IEnumerator Use_IncrementsInteractionCount()
     {
@@ -41,6 +50,9 @@ public class IUseableFloorItemTests
         Assert.AreEqual(2, useableItem.getInteractionCount());
     }
 
+    //Test: gameObject accurately logs which gameObject interacted with it and the number of interactions
+    //Predicted: UseableFloorItem, HeldItem
+    //Checked: Use()
     [UnityTest]
     public IEnumerator Use_LogsInteractionMessage()
     {

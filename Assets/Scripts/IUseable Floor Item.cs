@@ -2,6 +2,9 @@ using System.Diagnostics;
 using System.Globalization;
 using UnityEngine;
 
+//<summary>
+// Tracks the number of interactions with a specific gameObject
+//</summary>
 public class IUseableFloorItem : MonoBehaviour, IUseableFloor
 {
     private int interactionCount = 0;

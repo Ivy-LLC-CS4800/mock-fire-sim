@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-/// <summary>
-/// Represents each progress bar showing task completion on the report screen
-/// </summary>
+//<summary>
+// Displays database values with a progress bar visual
+//</summary>
 public class ProgressBar : MonoBehaviour
 {
     private Slider progressBar;  // Reference to the Slider (Progress Bar)
@@ -28,11 +28,6 @@ public class ProgressBar : MonoBehaviour
         StartCoroutine(FillProgressBar(targetValue));  // Start filling the slider smoothly
     }
 
-    /// <summary>
-    /// Smoothly fill slider to targeted percentage
-    /// </summary>
-    /// <param name="targetValue"></param>
-    /// <returns>IEnumerator object, which allows the logic to be executed over multiple frames (smoothly)</returns>
     private IEnumerator FillProgressBar(float targetValue)
     {
         float startValue = progressBar.value;  // Initial value
@@ -45,6 +40,6 @@ public class ProgressBar : MonoBehaviour
             yield return null;
         }
 
-        progressBar.value = targetValue;  // Ensure it reaches the final value
+        progressBar.value = targetValue;  // Ensure it reaches the final value(s)
     }
 }

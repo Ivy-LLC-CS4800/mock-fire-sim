@@ -1,3 +1,4 @@
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;  // This is required for scene management
 
@@ -6,6 +7,9 @@ using UnityEngine.SceneManagement;  // This is required for scene management
 /// </summary>
 public class SceneLoader : MonoBehaviour
 {
+    public bool MainSceneLoaded { get; private set; } = false;
+
+
     /// <summary>
     /// Load Main Screen when button is clicked
     /// </summary>
@@ -61,5 +65,17 @@ public class SceneLoader : MonoBehaviour
     public void LoadReportScene()
     {
         SceneManager.LoadScene("ReportScreen");
+    }
+
+    public void LoadScene(string sceneName)
+    {
+        if (Application.isPlaying)
+        {
+            SceneManager.LoadScene(sceneName);
+        }
+        else
+        {
+            EditorSceneManager.OpenScene($"Assets/Scenes/{sceneName}.unity");
+        }
     }
 }

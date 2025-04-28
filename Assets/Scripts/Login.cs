@@ -36,16 +36,17 @@ public class Login : MonoBehaviour
         string password = passwordInputField.text;
         if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
         {
+            errorCall.ShowPopup("Username or password cannot be empty.");
             return;
         }
 
         // Check if the username exists and password is correct
         if (databaseCall.CheckUsernameAndPassword(username, password))
         {
+            Global.GlobalUser = username;
             successCall.ShowPopup("Login successful for: " + username);
             Debug.Log("Login successful for: " + username);
             Invoke("ChangeToMainScene", delayBeforeSceneChange);
-            Global.GlobalUser = username;
         }
         else
         {

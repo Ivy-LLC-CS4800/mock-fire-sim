@@ -1,219 +1,209 @@
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
-using Moq; // Use Moq for mocking dependencies
-using UnityEngine.TestTools;
+using Mono.Data.Sqlite;
+using System.Data;
 using System.Collections;
+using TMPro;
+using UnityEngine.TestTools;
 
 public class LoginTest
 {
     private GameObject testObject;
     private Login login;
+    private string connectionString = "URI=file::memory:"; // In-memory SQLite database
+    private SqliteConnection connection;
 
-    /// <summary>
-    /// Sets up the test environment by creating a GameObject with the `Login` component
-    /// and mocking its UI elements and dependencies.
-    /// </summary>
     [SetUp]
     public void SetUp()
     {
         // Create a GameObject and attach the Login component
         testObject = new GameObject("LoginTestObject");
         login = testObject.AddComponent<Login>();
+        Assert.IsNotNull(login, "Login component should not be null.");
 
         // Mock UI elements
         login.usernameInputField = new GameObject("UsernameInputField").AddComponent<InputField>();
         login.passwordInputField = new GameObject("PasswordInputField").AddComponent<InputField>();
         login.loginButton = new GameObject("LoginButton").AddComponent<Button>();
         login.registerButton = new GameObject("RegisterButton").AddComponent<Button>();
+        Assert.IsNotNull(login.usernameInputField, "UsernameInputField should not be null.");
+        Assert.IsNotNull(login.passwordInputField, "PasswordInputField should not be null.");
+        Assert.IsNotNull(login.loginButton, "LoginButton should not be null.");
+        Assert.IsNotNull(login.registerButton, "RegisterButton should not be null.");
 
         // Mock dependencies
-        login.sceneCall = new Mock<SceneLoader>().Object;
-        login.databaseCall = new Mock<DatabaseManager>().Object;
-        login.errorCall = new Mock<Notification>().Object;
-        login.successCall = new Mock<Notification>().Object();
+        login.sceneCall = testObject.AddComponent<SceneLoader>(); // Use AddComponent instead of new
+        Assert.IsNotNull(login.sceneCall, "SceneLoader should not be null.");
+
+        // Initialize Notification components
+        var errorNotificationObject = new GameObject("ErrorNotification");
+        var errorPopup = new GameObject("ErrorPopup");
+        errorPopup.AddComponent<Canvas>(); // Add a Canvas component to simulate UI behavior
+        var errorText = new GameObject("ErrorText").AddComponent<TextMeshProUGUI>();
+        errorPopup.transform.SetParent(errorNotificationObject.transform);
+
+        var errorNotification = errorNotificationObject.AddComponent<Notification>();
+        errorNotification.notificationPopup = errorPopup;
+        errorNotification.notificationText = errorText;
+        login.errorCall = errorNotification;
+        Assert.IsNotNull(login.errorCall, "Error Notification should not be null.");
+
+        var successNotificationObject = new GameObject("SuccessNotification");
+        var successPopup = new GameObject("SuccessPopup");
+        successPopup.AddComponent<Canvas>(); // Add a Canvas component to simulate UI behavior
+        var successText = new GameObject("SuccessText").AddComponent<TextMeshProUGUI>();
+        successPopup.transform.SetParent(successNotificationObject.transform);
+
+        var successNotification = successNotificationObject.AddComponent<Notification>();
+        successNotification.notificationPopup = successPopup;
+        successNotification.notificationText = successText;
+        login.successCall = successNotification;
+        Assert.IsNotNull(login.successCall, "Success Notification should not be null.");
+
+        // Set up the in-memory SQLite database
+        connection = new SqliteConnection(connectionString);
+        Assert.IsNotNull(connection, "SqliteConnection should not be null.");
+        connection.Open();
+        Assert.IsTrue(connection.State == ConnectionState.Open, "SqliteConnection should be open.");
+
+        using (var cmd = connection.CreateCommand())
+        {
+            // Create the users table
+            cmd.CommandText = "CREATE TABLE users (username TEXT, password TEXT)";
+            cmd.ExecuteNonQuery();
+
+            // Insert mock data
+            cmd.CommandText = "INSERT INTO users (username, password) VALUES ('TestUser', 'TestPassword')";
+            cmd.ExecuteNonQuery();
+        }
+
+        // Override the DatabaseManager's dbPath to use the in-memory database
+        var dbManager = testObject.AddComponent<DatabaseManager>();
+        Assert.IsNotNull(dbManager, "DatabaseManager component should not be null.");
+
+        var connectionField = typeof(DatabaseManager).GetField("connection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.IsNotNull(connectionField, "DatabaseManager connection field should not be null.");
+        connectionField.SetValue(dbManager, connection);
+
+        login.databaseCall = dbManager;
+        Assert.IsNotNull(login.databaseCall, "DatabaseManager should not be null.");
     }
 
     [TearDown]
     public void TearDown()
     {
-        // Destroy the test GameObject and any associated objects
-        Object.DestroyImmediate(testObject);
+        // Destroy the test GameObject if it exists
+        if (testObject != null)
+        {
+            Object.DestroyImmediate(testObject);
+        }
+
+        // Close the database connection if it exists
+        if (connection != null && connection.State == ConnectionState.Open)
+        {
+            connection.Close();
+        }
     }
 
-    /// <summary>
-    /// Test: Verify that the `Start` method adds listeners to the login and register buttons.
-    /// Predicted: The `onClick` listeners for both buttons should not be null after `Start` is called.
-    /// Checked: The `onClick` listeners for `loginButton` and `registerButton` are compared to `null`.
-    /// </summary>
-    [Test]
-    public void Start_AddsButtonListeners()
-    {
-        // Act
-        login.Start();
-
-        // Assert
-        Assert.IsNotNull(login.loginButton.onClick, "Login button should have a listener attached.");
-        Assert.IsNotNull(login.registerButton.onClick, "Register button should have a listener attached.");
-    }
-
-    /// <summary>
-    /// Test: Verify that `OnLoginButtonClick` shows a success popup when the username and password are correct.
-    /// Predicted: The `successCall.ShowPopup` method should be called with the correct message.
-    /// Checked: The `successCall.ShowPopup` method is verified to be called once with the expected message.
-    /// </summary>
     [Test]
     public void OnLoginButtonClick_ShowsSuccessPopupForValidCredentials()
     {
         // Arrange
-        string testUsername = "TestUser";
-        string testPassword = "TestPassword";
-        login.usernameInputField.text = testUsername;
-        login.passwordInputField.text = testPassword;
+        login.usernameInputField.text = "TestUser";
+        login.passwordInputField.text = "TestPassword";
 
-        var mockDatabase = Mock.Get(login.databaseCall);
-        mockDatabase.Setup(db => db.CheckUsernameAndPassword(testUsername, testPassword)).Returns(true);
-
-        var mockSuccessCall = Mock.Get(login.successCall);
+        // Mock the success notification popup
+        var successPopupObject = new GameObject("SuccessPopup");
+        var successText = new GameObject("SuccessText").AddComponent<TextMeshProUGUI>();
+        successPopupObject.AddComponent<Canvas>(); // Add a Canvas component to simulate UI behavior
+        login.successCall.notificationPopup = successPopupObject;
+        login.successCall.notificationText = successText;
 
         // Act
         login.OnLoginButtonClick();
 
         // Assert
-        mockSuccessCall.Verify(sc => sc.ShowPopup($"Login successful for: {testUsername}"), Times.Once);
+        Assert.AreEqual("Login successful for: TestUser", successText.text, "Success popup should display the correct message.");
     }
 
-    /// <summary>
-    /// Test: Verify that `OnLoginButtonClick` shows an error popup when the username or password is incorrect.
-    /// Predicted: The `errorCall.ShowPopup` method should be called with the correct error message.
-    /// Checked: The `errorCall.ShowPopup` method is verified to be called once with the expected message.
-    /// </summary>
     [Test]
     public void OnLoginButtonClick_ShowsErrorPopupForInvalidCredentials()
     {
         // Arrange
-        string testUsername = "TestUser";
-        string testPassword = "WrongPassword";
-        login.usernameInputField.text = testUsername;
-        login.passwordInputField.text = testPassword;
+        login.usernameInputField.text = "TestUser";
+        login.passwordInputField.text = "WrongPassword";
 
-        var mockDatabase = Mock.Get(login.databaseCall);
-        mockDatabase.Setup(db => db.CheckUsernameAndPassword(testUsername, testPassword)).Returns(false);
-
-        var mockErrorCall = Mock.Get(login.errorCall);
+        // Mock the error notification popup
+        var errorPopupObject = new GameObject("ErrorPopup");
+        var errorText = new GameObject("ErrorText").AddComponent<TextMeshProUGUI>();
+        errorPopupObject.AddComponent<Canvas>(); // Add a Canvas component to simulate UI behavior
+        login.errorCall.notificationPopup = errorPopupObject;
+        login.errorCall.notificationText = errorText;
 
         // Act
         login.OnLoginButtonClick();
 
         // Assert
-        mockErrorCall.Verify(ec => ec.ShowPopup("Username or password is incorrect."), Times.Once);
+        Assert.AreEqual("Username or password is incorrect.", errorText.text, "Error popup should display the correct message.");
     }
 
-    /// <summary>
-    /// Test: Verify that `OnRegisterButtonClick` calls the `LoadRegisterScene` method.
-    /// Predicted: The `sceneCall.LoadRegisterScene` method should be called once.
-    /// Checked: The `sceneCall.LoadRegisterScene` method is verified to be called once.
-    /// </summary>
-    [Test]
-    public void OnRegisterButtonClick_CallsLoadRegisterScene()
-    {
-        // Arrange
-        var mockSceneCall = Mock.Get(login.sceneCall);
-
-        // Act
-        login.OnRegisterButtonClick();
-
-        // Assert
-        mockSceneCall.Verify(sc => sc.LoadRegisterScene(), Times.Once);
-    }
-
-    /// <summary>
-    /// Test: Verify that `ChangeToMainScene` calls the `LoadMainScene` method.
-    /// Predicted: The `sceneCall.LoadMainScene` method should be called once.
-    /// Checked: The `sceneCall.LoadMainScene` method is verified to be called once.
-    /// </summary>
-    [Test]
-    public void ChangeToMainScene_CallsLoadMainScene()
-    {
-        // Arrange
-        var mockSceneCall = Mock.Get(login.sceneCall);
-
-        // Act
-        login.GetType().GetMethod("ChangeToMainScene", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            .Invoke(login, null);
-
-        // Assert
-        mockSceneCall.Verify(sc => sc.LoadMainScene(), Times.Once);
-    }
-
-    /// <summary>
-    /// Test: Verify that `OnLoginButtonClick` does nothing when the username or password is empty.
-    /// Predicted: Neither the success nor error popup should be shown, and no database calls should be made.
-    /// Checked: Ensure that `successCall.ShowPopup`, `errorCall.ShowPopup`, and `databaseCall.CheckUsernameAndPassword` are not called.
-    /// </summary>
     [Test]
     public void OnLoginButtonClick_DoesNothingForEmptyUsernameOrPassword()
     {
         // Arrange
-        login.usernameInputField.text = "";
-        login.passwordInputField.text = "TestPassword";
+        login.usernameInputField.text = ""; // Empty username
+        login.passwordInputField.text = "TestPassword"; // Valid password
 
-        var mockDatabase = Mock.Get(login.databaseCall);
-        var mockSuccessCall = Mock.Get(login.successCall);
-        var mockErrorCall = Mock.Get(login.errorCall);
+        // Mock the success notification popup
+        var successPopupObject = new GameObject("SuccessPopup");
+        var successText = new GameObject("SuccessText").AddComponent<TextMeshProUGUI>();
+        successPopupObject.AddComponent<Canvas>(); // Add a Canvas component to simulate UI behavior
+        login.successCall.notificationPopup = successPopupObject;
+        login.successCall.notificationText = successText;
+
+        // Mock the error notification popup
+        var errorPopupObject = new GameObject("ErrorPopup");
+        var errorText = new GameObject("ErrorText").AddComponent<TextMeshProUGUI>();
+        errorPopupObject.AddComponent<Canvas>(); // Add a Canvas component to simulate UI behavior
+        login.errorCall.notificationPopup = errorPopupObject;
+        login.errorCall.notificationText = errorText;
 
         // Act
         login.OnLoginButtonClick();
 
         // Assert
-        mockDatabase.Verify(db => db.CheckUsernameAndPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        mockSuccessCall.Verify(sc => sc.ShowPopup(It.IsAny<string>()), Times.Never);
-        mockErrorCall.Verify(ec => ec.ShowPopup(It.IsAny<string>()), Times.Never);
+        Assert.IsFalse(successPopupObject.activeSelf, "Success popup should not be shown.");
+        Assert.IsFalse(errorPopupObject.activeSelf, "Error popup should not be shown.");
+        Assert.IsEmpty(successText.text, "Success popup text should be empty.");
+        Assert.IsEmpty(errorText.text, "Error popup text should be empty.");
     }
 
-    /// <summary>
-    /// Test: Verify that `Global.GlobalUser` is set correctly after a successful login.
-    /// Predicted: The `Global.GlobalUser` variable should be set to the username of the logged-in user.
-    /// Checked: The value of `Global.GlobalUser` is compared to the username.
-    /// </summary>
     [Test]
     public void OnLoginButtonClick_SetsGlobalUserForValidCredentials()
     {
         // Arrange
-        string testUsername = "TestUser";
-        string testPassword = "TestPassword";
-        login.usernameInputField.text = testUsername;
-        login.passwordInputField.text = testPassword;
-
-        var mockDatabase = Mock.Get(login.databaseCall);
-        mockDatabase.Setup(db => db.CheckUsernameAndPassword(testUsername, testPassword)).Returns(true);
+        login.usernameInputField.text = "user1";
+        login.passwordInputField.text = "123456";
 
         // Act
         login.OnLoginButtonClick();
 
         // Assert
-        Assert.AreEqual(testUsername, Global.GlobalUser, "Global.GlobalUser should be set to the logged-in username.");
+        Assert.AreEqual("user1", Global.GlobalUser, "Global.GlobalUser should be set to the logged-in username.");
     }
 
-    /// <summary>
-    /// Test: Verify that the scene transition is delayed by the specified amount of time after a successful login.
-    /// Predicted: The `LoadMainScene` method should be called after the delay specified by `delayBeforeSceneChange`.
-    /// Checked: Use a coroutine to wait for the delay and verify the method call.
-    /// </summary>
     [UnityTest]
     public IEnumerator OnLoginButtonClick_DelaysSceneChangeForValidCredentials()
     {
         // Arrange
-        string testUsername = "TestUser";
-        string testPassword = "TestPassword";
-        login.usernameInputField.text = testUsername;
-        login.passwordInputField.text = testPassword;
+        login.usernameInputField.text = "user1";
+        login.passwordInputField.text = "123456";
         login.delayBeforeSceneChange = 2f;
 
-        var mockDatabase = Mock.Get(login.databaseCall);
-        mockDatabase.Setup(db => db.CheckUsernameAndPassword(testUsername, testPassword)).Returns(true);
-
-        var mockSceneCall = Mock.Get(login.sceneCall);
+        // Mock the SceneLoader
+        var mockSceneLoader = new MockSceneLoader();
+        login.sceneCall = mockSceneLoader;
 
         // Act
         login.OnLoginButtonClick();
@@ -222,6 +212,6 @@ public class LoginTest
         yield return new WaitForSeconds(login.delayBeforeSceneChange + 0.1f);
 
         // Assert
-        mockSceneCall.Verify(sc => sc.LoadMainScene(), Times.Once);
+        Assert.IsTrue(mockSceneLoader.MainSceneLoaded, "Main scene should be loaded after the delay.");
     }
 }

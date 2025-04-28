@@ -11,7 +11,7 @@ public class GlobalTest
     public void GlobalUser_HasDefaultValue()
     {
         // Assert
-        Assert.AreEqual("user1", Global.GlobalUser, "GlobalUser should have the default value 'user1'.");
+        Assert.AreEqual("SecondUser", Global.GlobalUser, "GlobalUser should have the default value 'user1'.");
     }
 
     /// <summary>

@@ -77,7 +77,17 @@ public class PlayerTest
         // Arrange
         player.Start();
         player.inHandItem = null;
-        player.pickableHit = new RaycastHit { collider = mockPickableObject.GetComponent<Collider>() };
+        // Simulate a RaycastHit by creating a new instance and assigning the collider
+        var raycastHit = new RaycastHit
+        {
+            point = mockPickableObject.transform.position,
+            normal = Vector3.up,
+            distance = 1.0f
+        };
+
+        // Use reflection to set the private field `pickableHit` (if it's private)
+        var pickableHitField = typeof(Player).GetField("pickableHit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        pickableHitField.SetValue(player, raycastHit);
 
         // Act
         player.PickUp(new InputAction.CallbackContext());
@@ -121,7 +131,19 @@ public class PlayerTest
         // Arrange
         player.Start();
         player.inHandItem = mockPickableObject;
-        player.useableHit = new RaycastHit { collider = mockUseableObject.GetComponent<Collider>() };
+        // Simulate a RaycastHit by creating a new instance
+        // Position the mockUseableObject in front of the player
+        mockUseableObject.transform.position = player.transform.position + player.transform.forward * 2.0f;
+
+        // Perform a raycast to populate the RaycastHit
+        Ray ray = new Ray(player.transform.position, player.transform.forward);
+        Debug.DrawRay(ray.origin, ray.direction * 3.0f, Color.red, 1.0f);
+        RaycastHit raycastHit;
+        Assert.IsTrue(Physics.Raycast(ray, out raycastHit, 3.0f), "Raycast should hit the mockUseableObject.");
+
+        // Use reflection to set the private field `useableHit` (if it's private)
+        var useableHitField = typeof(Player).GetField("useableHit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        useableHitField.SetValue(player, raycastHit);
 
         var mockUseable = mockUseableObject.GetComponent<MockUseableFloor>();
         mockUseable.ResetCallCount();

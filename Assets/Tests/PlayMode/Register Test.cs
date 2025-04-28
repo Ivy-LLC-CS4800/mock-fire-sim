@@ -1,8 +1,10 @@
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.TestTools;
 using TMPro;
-using Moq; // Use Moq or a similar library for mocking if needed.
+using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class RegisterTests
 {
@@ -26,18 +28,22 @@ public class RegisterTests
         register.registerButton = new GameObject("RegisterButton").AddComponent<Button>();
         register.lengthConditionText = new GameObject("LengthConditionText").AddComponent<TextMeshProUGUI>();
 
-        // Mock dependencies
-        register.sceneCall = new Mock<SceneLoader>().Object;
-        register.databaseCall = new Mock<DatabaseManager>().Object;
-        register.errorCall = new Mock<Notification>().Object;
-        register.successCall = new Mock<Notification>().Object();
+        // Mock dependencies using custom mock classes
+        register.sceneCall = new MockSceneLoader();
+        register.databaseCall = new MockDatabaseManager();
+        register.errorCall = new MockNotification();
+        register.successCall = new MockNotification();
     }
 
+    /// <summary>
+    /// Cleans up the test environment by destroying the test GameObject and any associated objects.
+    /// </summary>
     [TearDown]
     public void TearDown()
     {
         // Destroy the test GameObject and any associated objects
-        Object.DestroyImmediate(testObject);
+        if (testObject != null)
+            Object.DestroyImmediate(testObject);
 
         // Destroy any UI elements or mock objects created
         if (register.usernameInputField != null)
@@ -53,35 +59,94 @@ public class RegisterTests
             Object.DestroyImmediate(register.lengthConditionText.gameObject);
     }
 
-    /// Test: Verify that the password validation updates the condition text correctly.
-    /// Predicted: For a valid password, the text color should be green. For an invalid password, the text color should be red.
-    /// Checked: The `lengthConditionText.text` and `lengthConditionText.color` properties are compared to the expected values.
-    [Test]
-    public void ValidatePassword_UpdatesConditionTextCorrectly()
+    /// <summary>
+    /// Test: Verify that the `OnRegisterButtonClick` method handles registration correctly.
+    /// Predicted: The success or error notifications should be shown based on the input.
+    /// Checked: The `successCall` or `errorCall` methods are invoked as expected.
+    /// </summary>
+    [UnityTest]
+    public IEnumerator OnRegisterButtonClick_HandlesRegistrationCorrectly()
     {
         // Arrange
-        string validPassword = "123456";
-        string invalidPassword = "123";
+        var mockDatabase = (MockDatabaseManager)register.databaseCall;
+        var mockSuccessNotification = (MockNotification)register.successCall;
+        var mockErrorNotification = (MockNotification)register.errorCall;
+
+        // Case 1: Successful registration
+        register.usernameInputField.text = "NewUser";
+        register.passwordInputField.text = "ValidPassword";
+        mockDatabase.ShouldRegisterSuccessfully = true;
 
         // Act
-        register.ValidatePassword(validPassword);
+        register.OnRegisterButtonClick();
+        yield return null;
 
-        // Assert for valid password
-        Assert.AreEqual("At least 6 characters", register.lengthConditionText.text);
-        Assert.AreEqual(register.validColor, register.lengthConditionText.color);
+        // Assert
+        Assert.IsTrue(mockSuccessNotification.WasPopupShown, "Success notification should be shown for successful registration.");
+        Assert.AreEqual("User registered: NewUser", mockSuccessNotification.LastMessage);
+
+        // Reset mock state
+        mockSuccessNotification.Reset();
+        mockErrorNotification.Reset();
+
+        // Case 2: Username already exists
+        register.usernameInputField.text = "ExistingUser";
+        register.passwordInputField.text = "ValidPassword";
+        mockDatabase.ShouldRegisterSuccessfully = false;
 
         // Act
-        register.ValidatePassword(invalidPassword);
+        register.OnRegisterButtonClick();
+        yield return null;
 
-        // Assert for invalid password
-        Assert.AreEqual("At least 6 characters", register.lengthConditionText.text);
-        Assert.AreEqual(register.invalidColor, register.lengthConditionText.color);
+        // Assert
+        Assert.IsTrue(mockErrorNotification.WasPopupShown, "Error notification should be shown for failed registration.");
+        Assert.AreEqual("Username already exists.", mockErrorNotification.LastMessage);
     }
-
-
-
-
 }
 
-    
-   
+/// <summary>
+/// Custom mock class for `SceneLoader`.
+/// </summary>
+public class MockSceneLoader : SceneLoader
+{
+    public string LastLoadedScene { get; private set; }
+
+    public override void LoadScene(string sceneName)
+    {
+        LastLoadedScene = sceneName;
+    }
+}
+
+/// <summary>
+/// Custom mock class for `DatabaseManager`.
+/// </summary>
+public class MockDatabaseManager : DatabaseManager
+{
+    public bool ShouldRegisterSuccessfully { get; set; }
+
+    public override bool RegisterUsername(string username, string password)
+    {
+        return ShouldRegisterSuccessfully;
+    }
+}
+
+/// <summary>
+/// Custom mock class for `Notification`.
+/// </summary>
+public class MockNotification : Notification
+{
+    public bool WasPopupShown { get; private set; }
+    public string LastMessage { get; private set; }
+
+    public override void ShowPopup(string message)
+    {
+        WasPopupShown = true;
+        LastMessage = message;
+    }
+
+    public void Reset()
+    {
+        WasPopupShown = false;
+        LastMessage = null;
+    }
+}

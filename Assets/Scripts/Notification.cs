@@ -10,13 +10,13 @@ public class Notification : MonoBehaviour
     public GameObject notificationPopup; // Reference to the notification popup panel
     public TextMeshProUGUI notificationText; // Reference to the notification text
 
-    void Start()
+    public void Start()
     {
         notificationPopup.SetActive(false); // Hide notification by default
     }
 
     // Show error popup
-    public void ShowPopup(string message)
+    public virtual void ShowPopup(string message)
     {
         notificationPopup.SetActive(true); // Show the popup
         notificationText.text = message; // Set the message in the popup
@@ -26,7 +26,7 @@ public class Notification : MonoBehaviour
     }
 
     // Hide the error popup
-    void HidePopup()
+    public void HidePopup()
     {
         notificationPopup.SetActive(false); // Hide the popup
     }

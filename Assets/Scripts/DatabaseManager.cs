@@ -17,6 +17,8 @@ public class DatabaseManager : MonoBehaviour
 {
     private string dbPath = "URI=file:users.db";
 
+    private SqliteConnection connection;
+
     //TODO: Initialize database
     //Parameters: Start application
     void Start()
@@ -24,6 +26,11 @@ public class DatabaseManager : MonoBehaviour
         CreateDB();
         CreateTasksTable();
         CreateSubtasksTable();
+    }
+
+    public void SetConnection(SqliteConnection conn)
+    {
+        connection = conn;
     }
 
     //TODO: Creates a database instance and connects to local device database
@@ -79,7 +86,7 @@ public class DatabaseManager : MonoBehaviour
 
     //TODO: Adds new username and password database
     //Parameters: Username, password, initialized database instance
-    public bool RegisterUsername(string username, string password)
+    public virtual bool RegisterUsername(string username, string password)
     {
         return RegisterUsernameHelper(username, password);
     }

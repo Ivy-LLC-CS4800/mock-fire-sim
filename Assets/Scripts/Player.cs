@@ -8,22 +8,22 @@ using UnityEngine.InputSystem;
 //</summary>
 public class Player : MonoBehaviour
 {
-    [SerializeField] private LayerMask pickableLayerMask;
-    [SerializeField] private LayerMask useableLayerMask;
-    [SerializeField] private Transform playerCameraTransform;
-    [SerializeField] private GameObject pickUpUI;
-    [SerializeField] private GameObject useableUI;
+    [SerializeField] public LayerMask pickableLayerMask;
+    [SerializeField] public LayerMask useableLayerMask;
+    [SerializeField] public Transform playerCameraTransform;
+    [SerializeField] public GameObject pickUpUI;
+    [SerializeField] public GameObject useableUI;
     [SerializeField] [Min(1)] private float hitRange = 3;
-    [SerializeField] private Transform pickUpParent;
-    [SerializeField] private GameObject inHandItem;
-    [SerializeField] private InputActionReference interactionInput, dropInput, useInput;
-    private RaycastHit pickableHit;
-    private RaycastHit useableHit;
-    private Collider lastHit = null;
+    [SerializeField] public Transform pickUpParent;
+    [SerializeField] public GameObject inHandItem;
+    [SerializeField] public InputActionReference interactionInput, dropInput, useInput;
+    public RaycastHit pickableHit;
+    public RaycastHit useableHit;
+    public Collider lastHit = null;
 
     //TODO: Assigns keybinds to specific functions
     //Parameters: Scene change and or application start
-    private void Start()
+    public void Start()
     {
          if (interactionInput?.action != null)
         interactionInput.action.performed += PickUp;
@@ -37,7 +37,7 @@ public class Player : MonoBehaviour
 
     //TODO: gameObject in handSlot interacts with gameObjects on the floor, gameObject interacted with keeps track of number of times it was interacted with
     //Parameters: Keyboard input, raycast detecting gameObject, gameObject in handSlot, gameObject useableFloor component, useable layer, use function
-    private void Use(InputAction.CallbackContext obj){
+    public void Use(InputAction.CallbackContext obj){
         if(useableHit.collider != null){
             if(inHandItem != null){
                 IUseableFloor usable = useableHit.collider.GetComponent<IUseableFloor>();
@@ -59,7 +59,7 @@ public class Player : MonoBehaviour
 
     //TODO: Drops gameObject in handSlot
     //Parameters: Keyboard input, gameObject in handSlot, gameObject rigid body component
-    private void Drop(InputAction.CallbackContext obj){
+    public void Drop(InputAction.CallbackContext obj){
         if (inHandItem != null){
             inHandItem.transform.SetParent(null);
             Rigidbody rb = inHandItem.GetComponent<Rigidbody>();
@@ -72,7 +72,7 @@ public class Player : MonoBehaviour
 
     //TODO: Picks up a gameObject into the handSlot
     //Parameters: Keyboard input, raycast detects gameObject, empty in handSlot, gameObject IPickable component
-    private void PickUp(InputAction.CallbackContext obj){
+    public void PickUp(InputAction.CallbackContext obj){
         if(pickableHit.collider != null && inHandItem == null){
             IPickable pickableItem = pickableHit.collider.GetComponent<IPickable>();
             if (pickableItem != null){
@@ -84,7 +84,7 @@ public class Player : MonoBehaviour
 
     //TODO: Keeps raycast infront of main camera, enable/disable pickUp UI, enable/disable useable UI, enable/disable outline script
     //Parameters: Raycast initilized, inHand slot empty/full for UI, gameObject outline component
-    private void Update(){
+    public void Update(){
 
         //This raycast is for useable objects
         if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out useableHit, hitRange, useableLayerMask)){

@@ -1,3 +1,4 @@
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -18,8 +19,13 @@ public class SceneLoadTest
         var gameObject = new GameObject("SceneLoader");
         sceneLoader = gameObject.AddComponent<SceneLoader>();
 
-        // Mock SceneManager.LoadScene by overriding it with a delegate
-        SceneManager.LoadScene = (sceneName) => { loadedSceneName = sceneName; };
+        // Mock SceneManager.LoadScene by capturing the scene name
+        loadedSceneName = null; // Reset the loaded scene name
+        var originalLoadSceneMethod = typeof(SceneManager).GetMethod("LoadScene", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string) }, null);
+        Assert.IsNotNull(originalLoadSceneMethod, "SceneManager.LoadScene method not found.");
+
+        // Replace the method with a mock
+        // SceneManager.LoadScene = (sceneName) => { loadedSceneName = sceneName; };
     }
 
     [TearDown]

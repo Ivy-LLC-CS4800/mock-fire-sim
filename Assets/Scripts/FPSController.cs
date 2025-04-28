@@ -19,20 +19,20 @@ public class FPSController : MonoBehaviour
     public float lookXLimit = 45f;
 
 
-    Vector3 moveDirection = Vector3.zero;
-    float rotationX = 0;
+    public Vector3 moveDirection = Vector3.zero;
+    public float rotationX = 0;
 
     public bool canMove = true;
 
     Animator animator;
 
     
-    CharacterController characterController;
+    public CharacterController characterController;
 
     /// <summary>
     /// Sets up the first person perspective
     /// </summary>
-    void Start()
+    public void Start()
     {
         characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
@@ -43,7 +43,7 @@ public class FPSController : MonoBehaviour
     /// <summary>
     /// Takes input and outputs the proper movement commands
     /// </summary>
-    void Update()
+    public void Update()
     {
 
         #region Handles Movement

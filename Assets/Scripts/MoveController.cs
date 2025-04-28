@@ -17,10 +17,12 @@ public class MoveController : MonoBehaviour
     int isWalkingRightHash;
     int isWalkingBackwardsHash;
 
+    public IInputHandler InputHandler { get; set; } = new UnityInputHandler(); // interface for input handling
+
     /// <summary>
     /// On start, grabs Animator component and converts all boolean parameters to a integer hash value
     /// </summary>
-    void Start()
+    public void Start()
     {
         animator = GetComponent<Animator>();
         isWalkingHash = Animator.StringToHash("isWalking");
@@ -33,7 +35,7 @@ public class MoveController : MonoBehaviour
     /// <summary>
     /// Animation logic from user WASD input
     /// </summary>
-    void Update()
+    public void Update()
     {
 
         #region Movement
@@ -106,6 +108,19 @@ public class MoveController : MonoBehaviour
         if (isRunning && (!forwardPressed || !runPressed) )
         {
             animator.SetBool(isRunningHash, false);
+        }
+
+        #endregion
+
+        #region 
+
+        if (InputHandler.GetKey(KeyCode.W))
+        {
+            animator.SetBool(isWalkingHash, true);
+        }
+        else
+        {
+            animator.SetBool(isWalkingHash, false);
         }
 
         #endregion

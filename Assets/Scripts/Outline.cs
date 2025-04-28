@@ -112,7 +112,7 @@ public class Outline : MonoBehaviour {
   /// Called when script instance is loaded.
   /// Caches renderers, instantiates outline materials, and loads smooth normals.
   /// </summary>
-  void Awake() {
+  public void Awake() {
 
     // Cache renderers
     renderers = GetComponentsInChildren<Renderer>();
@@ -135,7 +135,7 @@ public class Outline : MonoBehaviour {
   /// Called when component becomes enabled.
   /// Appends the outline mask and fill materials to the materials of each renderer.
   /// </summary>
-  void OnEnable() {
+  public void OnEnable() {
     foreach (var renderer in renderers) {
 
       // Append outline shaders
@@ -185,7 +185,7 @@ public class Outline : MonoBehaviour {
   /// Called when component is disabled.
   /// Removes instantiated outline and fill materials.
   /// </summary>
-  void OnDisable() {
+  public void OnDisable() {
     foreach (var renderer in renderers) {
 
       // Remove outline shaders
